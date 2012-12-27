@@ -1,0 +1,27 @@
+# this config needs haproxy-1.1.28 or haproxy-1.2.1
+
+global
+  maxconn 4096
+  daemon
+
+defaults
+  log global
+  mode  tcp
+  option  tcplog
+  option  dontlognull
+  retries 3
+  option redispatch
+  contimeout  5000
+  clitimeout  50000
+  srvtimeout  50000
+
+listen admin_page 0.0.0.0:12345
+       mode http
+       stats uri /
+       stats realm HAProxy\ Statistics
+       stats auth admin:supersecret
+
+listen redis 127.0.0.1:<%= virtual_port %>
+        mode tcp
+        option tcplog
+        server redismaster <%= destination_host %>:<%= destination_port %> check

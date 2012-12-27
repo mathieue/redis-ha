@@ -1,0 +1,14 @@
+sentinel:
+  host: '192.168.2.2'
+  port: '26379'
+
+master:
+  host: '192.168.2.2'
+  port: '6379'
+
+slave:
+  host: '192.168.2.2'
+  port: '6380'
+
+virtual:
+  port: '6389'

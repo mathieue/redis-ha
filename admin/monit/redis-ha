@@ -1,0 +1,4 @@
+check process redis-ha with pidfile /home/deploy/redis-ha/tmp/redis-ha.pid
+  start program = "/home/deploy/redis-ha/admin/wrapper-pid.sh start"
+  stop program = "/home/deploy/redis-ha/admin/wrapper-pid.sh stop"
+  if 2 restarts within 15 cycles then timeout
