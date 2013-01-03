@@ -15,31 +15,37 @@ module RedisHA
       report_conf
 
       @redis = Redis.new(:host => @sentinel_host, :port => @sentinel_port)
-      try_connect_master
-      
+      get_master
+      switch_to(@master)
+
       @redis.subscribe('+failover-end') do |on|
         on.message do |channel, message|
-          log "master is down...."
-          switch_to_slave
+          log "failover end... a master  is down...."
+          get_master
+          switch_to(@master)
         end
       end
     end
 
-    def try_connect_master
-      log "trying to connect to master..."
-      begin
-       redis = Redis.new(:host => @master_host, :port => @master_port)
-       log redis.ping
-       write_ha_conf(@virtual_port, @master_host, @master_port)
-      rescue Redis::CannotConnectError => e
-       log "impossible to connect to master"
-       switch_to_slave
+    def get_master
+      @master = @masters.find do |master|
+        is_master(master)
       end
+      log "master is #{@master}"
     end
 
-    def switch_to_slave
-      log "switching from master #{@master_host}:#{@master_port} to slave #{@slave_host}:#{@slave_port}"
-       write_ha_conf(@virtual_port, @slave_host, @slave_port)
+    def is_master(master)
+     begin
+       redis = Redis.new(:host => master['host'], :port => master['port'])
+       redis.set('redisha:canwrite', 'yes')
+     rescue Exception => e
+       false
+     end
+    end
+
+    def switch_to(master)
+      log "switching to master #{master['host']}:#{master['port']}"
+      write_ha_conf(@virtual_port, master['host'], master['port'])
     end
   end
 end
